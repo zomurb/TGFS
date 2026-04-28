@@ -137,18 +137,6 @@ tgfs init-fs
 
 ---
 
-## Скриншоты
-
-Ниже готовые места для скриншотов (замени пути на реальные картинки в репозитории, например `docs/screenshots/...`):
-
-```md
-![CLI list](docs/screenshots/cli-ls.png)
-![Bot commands](docs/screenshots/bot-commands.png)
-![Upload progress](docs/screenshots/upload-progress.png)
-```
-
----
-
 ## Частые проблемы
 
 - `ValueError: API ID or Hash cannot be empty`  
@@ -169,7 +157,3 @@ tgfs init-fs
 - Используйте проект только для законного контента и с учётом правил Telegram.
 
 ---
-
-## Лицензия
-
-Пока не задана отдельно. При желании добавьте `LICENSE` (например, MIT).
