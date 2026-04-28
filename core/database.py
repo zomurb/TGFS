@@ -1,7 +1,6 @@
 import sqlite3
 import os
-
-DB_PATH = "tgfs.db"
+from config import DB_PATH
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
