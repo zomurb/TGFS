@@ -2,8 +2,8 @@ import os
 import math
 import asyncio
 from telethon import TelegramClient, errors
-from database import add_file, add_chunk
-from encryption import derive_key, encrypt_data, decrypt_data, get_file_hash, get_hash
+from core.database import add_file, add_chunk
+from core.encryption import derive_key, encrypt_data, decrypt_data, get_file_hash, get_hash
 
 CHUNK_SIZE = 48 * 1024 * 1024  # 48 MB
 MAX_PARALLEL = 5
@@ -100,7 +100,7 @@ class TGStorage:
                 await asyncio.sleep(2 ** attempt)
 
     async def download_file(self, file_id, dest_path, chunks, password=None, progress_callback=None):
-        from database import get_file_info
+        from core.database import get_file_info
         file_info = get_file_info(file_id)
         is_encrypted = file_info[5]
         salt = file_info[6]

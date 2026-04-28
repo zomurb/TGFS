@@ -10,14 +10,14 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, Downlo
 from rich.panel import Panel
 from rich.prompt import Prompt
 
-from database import (
+from core.database import (
     init_db, get_all_files, get_file_chunks,
     delete_file_from_db, get_file_info, search_files,
     set_setting, get_setting
 )
 from storage import TGStorage
 from config import API_ID, API_HASH
-from encryption import derive_key, get_hash
+from core.encryption import derive_key, get_hash
 
 console = Console()
 app = typer.Typer()

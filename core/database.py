@@ -6,7 +6,7 @@ DB_PATH = "tgfs.db"
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
+
     # Таблица файлов
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS files (
@@ -20,7 +20,7 @@ def init_db():
         upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
-    
+
     # Таблица частей файлов (сообщения в Telegram)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS chunks (
@@ -39,7 +39,7 @@ def init_db():
         value TEXT
     )
     ''')
-    
+
     conn.commit()
     conn.close()
 
