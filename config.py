@@ -1,3 +1,8 @@
-API_ID = 33045341
-API_HASH = "86c1a45367c92315e8a835094613c67c"
-CHUNK_SIZE = 48 * 1024 * 1024  # 48 MB
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_ID = os.getenv("TG_API_ID")
+API_HASH = os.getenv("TG_API_HASH")
+CHUNK_SIZE = 48 * 1024 * 1024
