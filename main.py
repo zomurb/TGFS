@@ -23,6 +23,11 @@ console = Console()
 app = typer.Typer()
 
 async def get_storage():
+    if not API_ID or not API_HASH:
+        raise ValueError(
+            "Не заданы Telegram API credentials. Укажите API_ID/API_HASH "
+            "или TG_API_ID/TG_API_HASH в .env."
+        )
     storage = TGStorage(API_ID, API_HASH)
     await storage.connect()
     return storage
@@ -40,9 +45,10 @@ def check_password():
         # We store salt for the master password too
         set_setting("master_password_salt", salt.hex())
         key = derive_key(password, salt)
-        set_setting("master_password_hash", get_hash(key))
+        master_key = get_hash(key)
+        set_setting("master_password_hash", master_key)
         console.print("[green]Мастер-пароль успешно установлен![/green]")
-        return password
+        return master_key
 
     password = Prompt.ask("Введите мастер-пароль", password=True)
     salt = bytes.fromhex(get_setting("master_password_salt"))
@@ -50,7 +56,7 @@ def check_password():
     if get_hash(key) != stored_hash:
         console.print("[red]Неверный пароль![/red]")
         sys.exit(1)
-    return password
+    return stored_hash
 
 @app.command()
 def init_fs():
@@ -87,9 +93,9 @@ def upload(path: str, encrypt: bool = typer.Option(True, help="Зашифров�
         console.print(f"[red]Ошибка: Файл {path} не найден.[/red]")
         return
     
-    password = None
+    master_key = None
     if encrypt:
-        password = check_password()
+        master_key = check_password()
 
     async def run_upload():
         storage = await get_storage()
@@ -117,7 +123,7 @@ def upload(path: str, encrypt: bool = typer.Option(True, help="Зашифров�
                 if progress.tasks[chunk_tasks[idx]].finished:
                     progress.remove_task(chunk_tasks[idx])
 
-            await storage.upload_file(path, password, update_progress)
+            await storage.upload_file(path, master_key, update_progress)
             
         console.print(f"[bold green]Файл {os.path.basename(path)} успешно загружен![/bold green]")
 
@@ -138,9 +144,9 @@ def download(file_id: int, output: str = "."):
     is_encrypted = file_info[5]
     file_size = file_info[2]
     
-    password = None
+    master_key = None
     if is_encrypted:
-        password = check_password()
+        master_key = check_password()
 
     dest = os.path.join(output, name) if os.path.isdir(output) else output
 
@@ -169,7 +175,7 @@ def download(file_id: int, output: str = "."):
                 if progress.tasks[chunk_tasks[idx]].finished:
                     progress.remove_task(chunk_tasks[idx])
 
-            await storage.download_file(file_id, dest, chunks, password, update_progress)
+            await storage.download_file(file_id, dest, chunks, master_key, update_progress)
             
         console.print(f"[bold green]Файл сохранен в: {dest}[/bold green]")
 
