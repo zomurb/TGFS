@@ -10,20 +10,20 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, Downlo
 from rich.panel import Panel
 from rich.prompt import Prompt
 
-from database import (
+from core.database import (
     init_db, get_all_files, get_file_chunks, 
     delete_file_from_db, get_file_info, search_files,
     set_setting, get_setting
 )
-from storage import TGStorage
-from config import API_ID, API_HASH
-from encryption import derive_key, get_hash
+from core.storage import TGStorage
+from config import TG_API_ID, TG_API_HASH, CHUNK_SIZE
+from core.encryption import derive_key, get_hash
 
 console = Console()
 app = typer.Typer()
 
 async def get_storage():
-    storage = TGStorage(API_ID, API_HASH)
+    storage = TGStorage(TG_API_ID, TG_API_HASH)
     await storage.connect()
     return storage
 
@@ -106,7 +106,7 @@ def upload(path: str, encrypt: bool = typer.Option(True, help="Зашифров�
         ) as progress:
             overall_task = progress.add_task("[cyan]Загрузка...", total=file_size)
             chunk_tasks = {}
-            total_chunks = math.ceil(file_size / (48 * 1024 * 1024))
+            total_chunks = math.ceil(file_size / CHUNK_SIZE)
 
             async def update_progress(idx, size):
                 if idx not in chunk_tasks:
