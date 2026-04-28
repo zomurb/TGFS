@@ -7,9 +7,12 @@ from encryption import derive_key, encrypt_data, decrypt_data, get_file_hash, ge
 
 CHUNK_SIZE = 48 * 1024 * 1024  # 48 MB
 MAX_PARALLEL = 5
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class TGStorage:
     def __init__(self, api_id, api_hash, session_name='tgfs_session'):
+        if session_name == "tgfs_session":
+            session_name = os.path.join(BASE_DIR, session_name)
         self.client = TelegramClient(session_name, api_id, api_hash)
 
     async def connect(self):

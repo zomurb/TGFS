@@ -3,6 +3,7 @@ import asyncio
 import os
 import sys
 import math
+import subprocess
 from typing import Optional
 from rich.console import Console
 from rich.table import Table
@@ -21,6 +22,82 @@ from encryption import derive_key, get_hash
 
 console = Console()
 app = typer.Typer()
+bot_app = typer.Typer(help="Управление TGFS ботом")
+app.add_typer(bot_app, name="bot")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+RUNTIME_DIR = os.path.join(BASE_DIR, ".tgfs")
+BOT_PID_FILE = os.path.join(RUNTIME_DIR, "bot.pid")
+BOT_SCRIPT = os.path.join(BASE_DIR, "bot.py")
+
+
+def _ensure_runtime_dir():
+    os.makedirs(RUNTIME_DIR, exist_ok=True)
+
+
+def _read_bot_pid() -> Optional[int]:
+    if not os.path.exists(BOT_PID_FILE):
+        return None
+    try:
+        with open(BOT_PID_FILE, "r", encoding="utf-8") as f:
+            return int(f.read().strip())
+    except Exception:
+        return None
+
+
+def _is_pid_running(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    return True
+
+
+def _bot_status():
+    pid = _read_bot_pid()
+    if not pid:
+        return False, None
+    if _is_pid_running(pid):
+        return True, pid
+    # stale PID file
+    try:
+        os.remove(BOT_PID_FILE)
+    except OSError:
+        pass
+    return False, None
+
+
+def _start_bot_process():
+    _ensure_runtime_dir()
+    kwargs = {
+        "cwd": BASE_DIR,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+        "stdin": subprocess.DEVNULL,
+        "start_new_session": True,
+    }
+    if os.name == "nt":
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+    proc = subprocess.Popen([sys.executable, BOT_SCRIPT], **kwargs)
+    with open(BOT_PID_FILE, "w", encoding="utf-8") as f:
+        f.write(str(proc.pid))
+    return proc.pid
+
+
+def _stop_bot_process(pid: int):
+    if os.name == "nt":
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    else:
+        os.kill(pid, 15)
+    if os.path.exists(BOT_PID_FILE):
+        os.remove(BOT_PID_FILE)
 
 async def get_storage():
     if not API_ID or not API_HASH:
@@ -63,6 +140,49 @@ def init_fs():
     """Инициализировать базу данных."""
     init_db()
     console.print(Panel("[bold green]База данных TGFS готова к работе![/bold green]"))
+
+
+@bot_app.command("start")
+def bot_start():
+    """Запустить бота в фоне."""
+    running, pid = _bot_status()
+    if running:
+        console.print(f"[yellow]Бот уже запущен (PID {pid}).[/yellow]")
+        return
+    new_pid = _start_bot_process()
+    console.print(f"[green]Бот запущен в фоне (PID {new_pid}).[/green]")
+
+
+@bot_app.command("stop")
+def bot_stop():
+    """Остановить фонового бота."""
+    running, pid = _bot_status()
+    if not running or not pid:
+        console.print("[yellow]Бот не запущен.[/yellow]")
+        return
+    _stop_bot_process(pid)
+    console.print(f"[green]Бот остановлен (PID {pid}).[/green]")
+
+
+@bot_app.command("status")
+def bot_status():
+    """Показать статус бота."""
+    running, pid = _bot_status()
+    if running:
+        console.print(f"[green]Бот запущен[/green] (PID {pid}).")
+    else:
+        console.print("[yellow]Бот не запущен.[/yellow]")
+
+
+@app.command()
+def up():
+    """Поднять бота, если он не запущен."""
+    running, pid = _bot_status()
+    if running:
+        console.print(f"[green]Бот уже запущен[/green] (PID {pid}).")
+        return
+    new_pid = _start_bot_process()
+    console.print(f"[green]Бот запущен[/green] (PID {new_pid}).")
 
 @app.command()
 def ls():

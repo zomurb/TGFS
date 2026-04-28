@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tgfs-cli"
+version = "0.1.0"
+description = "Telegram File Storage CLI"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiogram",
+    "cryptography",
+    "python-dotenv",
+    "rich",
+    "telethon",
+    "typer",
+]
+
+[project.scripts]
+tgfs = "main:app"
+
+[tool.setuptools]
+py-modules = ["main", "database", "storage", "encryption", "config", "bot"]
