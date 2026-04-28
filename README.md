@@ -31,8 +31,8 @@
 3. **Настройте API:**
    Отредактируйте файл `config.py` или создайте его, указав свои данные с [my.telegram.org](https://my.telegram.org):
    ```python
-   API_ID = 33045341
-   API_HASH = "86c1a45367c92315e8a835094613c67c"
+   API_ID = YOUR_ID
+   API_HASH = "YOUR_HASH_ID"
    ```
 
 ---
